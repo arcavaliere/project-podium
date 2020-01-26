@@ -31,7 +31,8 @@
       :create-project
       :create-project-leg
       :change-project
-      :change-project-leg))
+      :change-project-leg
+      :connect-to-database))
 (in-package :project-podium.models)
 
 
@@ -40,7 +41,7 @@
 (clsql:def-view-class user ()
   ((user-id :accessor user-user-id
             :db-kind :key
-            :db-constraints :not-null
+            :db-constraints (:not-null :auto-increment :unique)
             :type integer
             :initarg :user-id)
    (username :accessor user-username
@@ -62,7 +63,7 @@
 (clsql:def-view-class project ()
   ((id :accessor project-id
        :db-kind :key
-       :db-constraints :not-null
+       :db-constraints (:not-null :auto-increment :unique)
        :type integer
        :initarg :id)
    (name :accessor project-name
@@ -100,7 +101,7 @@
 (clsql:def-view-class project-leg
   ((id :accessor project-leg-id
        :db-kind :key
-       :db-constraints :not-null
+       :db-constraints (:not-null :auto-increment :unique)
        :type integer
        :initarg :id)
    (leader :accessor project-leg-leader
@@ -130,3 +131,21 @@
   (:base-table project-leg))
 
 ;; Storage
+
+(defun connect-to-database ()
+  (clsql:connect "default.db" :database-type :sqlite)
+  (clsql:locally-enable-sql-reader-syntax))
+
+;; Helpers
+
+(defun find-user (user-id)
+  (clsql:select 'user :where [= [slot-value 'user-id user-id]]))
+
+(defun register-user (&key username full-name email password)
+  ((let ((user (make-instance 'user
+                  :username username
+                  :full-name full-name
+                  :email email
+                  :password (cl-pass:hash password))))
+     (clsql:update-records-from-instance user))
+   user))
