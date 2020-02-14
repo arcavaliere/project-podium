@@ -41,7 +41,7 @@
 (clsql:def-view-class user ()
   ((user-id :accessor user-user-id
             :db-kind :key
-            :db-constraints (:not-null :auto-increment :unique)
+            :db-constraints (:not-null :unique)
             :type integer
             :initarg :user-id)
    (username :accessor user-username
@@ -63,7 +63,7 @@
 (clsql:def-view-class project ()
   ((id :accessor project-id
        :db-kind :key
-       :db-constraints (:not-null :auto-increment :unique)
+       :db-constraints (:not-null :unique)
        :type integer
        :initarg :id)
    (name :accessor project-name
@@ -98,10 +98,10 @@
   (documentation "A project")
   (:base-table project))
 
-(clsql:def-view-class project-leg
+(clsql:def-view-class project-leg ()
   ((id :accessor project-leg-id
        :db-kind :key
-       :db-constraints (:not-null :auto-increment :unique)
+       :db-constraints (:not-null :unique)
        :type integer
        :initarg :id)
    (leader :accessor project-leg-leader
@@ -133,8 +133,15 @@
 ;; Storage
 
 (defun connect-to-database ()
-  (clsql:connect "default.db" :database-type :sqlite)
-  (clsql:locally-enable-sql-reader-syntax))
+  (clsql:connect "default.db" :database-type :sqlite3)
+  (clsql:locally-enable-sql-reader-syntax)
+  (let ((tables (list 'user 'project 'project-leg)))
+    (mapcar #'create-table tables)))
+
+(defun create-table (table-name)
+  (if (not (clsql:table-exists-p table-name))
+      (clsql:create-view-from-class table-name)
+      t))
 
 ;; Helpers
 

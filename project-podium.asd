@@ -11,6 +11,7 @@
                :quri
                :clack
                :cl-json
+               :cl-pass
                :clsql)
   :defsystem-depends-on (:asdf-linguist)
   :components ((:module "assets"
