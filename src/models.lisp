@@ -18,6 +18,7 @@
       :project-status)
   (:export
       :project-leg
+      :project-leg-project
       :project-leg-leader
       :project-leg-members
       :project-leg-deliverable
@@ -104,13 +105,20 @@
        :db-constraints (:not-null :unique)
        :type integer
        :initarg :id)
+   (project :accessor project-leg-project
+            :initarg :project
+            :db-kind :join
+            :db-info (:join-class project
+                      :home-key project-leg-id
+                      :foreign-key project-id
+                      :set nil))
    (leader :accessor project-leg-leader
            :initarg :leader
            :db-kind :join
            :db-info (:join-class user
                      :home-key project-leg-id
                      :foreign-key user-id
-                     :set nil))
+                    :set nil))
    (members :accessor project-leg-members
             :initarg :members
             :db-kind :join
@@ -132,8 +140,8 @@
 
 ;; Storage
 
-(defun connect-to-database ()
-  (clsql:connect "default.db" :database-type :sqlite3)
+(defun connect-to-database (&optional (database-name "default.db"))
+  (clsql:connect database-name :database-type :sqlite3)
   (clsql:locally-enable-sql-reader-syntax)
   (let ((tables (list 'user 'project 'project-leg)))
     (mapcar #'create-table tables)))
@@ -149,10 +157,65 @@
   (clsql:select 'user :where [= [slot-value 'user-id user-id]]))
 
 (defun register-user (&key username full-name email password)
-  ((let ((user (make-instance 'user
+  (let ((user (make-instance 'user
                   :username username
                   :full-name full-name
                   :email email
                   :password (cl-pass:hash password))))
-     (clsql:update-records-from-instance user))
+     (clsql:update-records-from-instance user)
    user))
+
+(defun projects (&key project-id leader-id)
+    (cond ((not (eq project-id nil)) (clsql:select 'project :where [= [slot-value 'project-id project-id]]))
+          ((not (eq leader-id nil)) (clsql:select 'project :where [= [slot-value 'project-leader leader-id]]))
+          t (clsql:select 'project)))
+
+(defun project-legs (&key project-id project-leg-id leader-id)
+    (cond ((not (eq project-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg-project project-id]]))
+          ((not (eq project-leg-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg-id project-leg-id]]))
+          ((not (eq leader-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg-leader leader-id]]))
+          t (clsql:select 'project-leg)))
+
+(defun create-project (&key name leader summary status members)
+  (let ((project (make-instance 'project
+                                :name name
+                                :leader leader
+                                :summary summary
+                                :status status
+                                :members members
+                                :legs nil)))
+    (clsql:update-records-from-instance project)
+    project))
+
+(defun create-project-leg (&key project leader members deliverable due-date status)
+  (let ((leg (make-instance 'project-leg
+                            :project project
+                            :leader leader
+                            :members members
+                            :deliverable deliverable
+                            :due-date due-date
+                            :status status)))
+    (clsql:update-records-from-instance leg)
+    leg))
+
+(defun change-project (id &key name leader members summary legs status)
+  (let ((project (car (clsql:select 'project :where [= ['slot-value project-id id]]))))
+    (cond ((not (eq name nil)) (setf (slot-value project 'project-name) name))
+          ((not (eq leader nil)) (setf (slot-value project 'project-leader) leader))
+          ((not (eq members nil)) (setf (slot-value project 'project-members) members))
+          ((not (eq summary nil)) (setf (slot-value project 'project-summary) summary))
+          ((not (eq legs nil)) (setf (slot-value project 'project-legs) legs))
+          ((not (eq status nil)) (setf (slot-value project 'project-status) status)))
+    (clsql:update-records-from-instance project)
+    project))
+
+(defun change-project-leg (id &key project leader members deliverable due-date status)
+  (let ((leg (car (clsql:select 'project-leg :where [= ['slot-value project-leg-id id]]))))
+    (cond ((not (eq project nil)) (setf (slot-value leg 'project-leg-project) project))
+          ((not (eq leader nil)) (setf (slot-value leg 'project-leg-leader) leader))
+          ((not (eq members nil)) (setf (slot-value leg 'project-leg-members) members))
+          ((not (eq deliverable nil)) (setf (slot-value leg 'project-leg-deliverable) deliverable))
+          ((not (eq due-date nil)) (setf (slot-value leg 'project-leg-due-date) due-date))
+          ((not (eq status nil)) (setf (slot-value leg 'project-leg-status) status)))
+    (clsql:update-records-from-instance leg)
+    leg))

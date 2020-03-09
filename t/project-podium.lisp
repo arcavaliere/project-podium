@@ -1,6 +1,7 @@
 (in-package :cl-user)
 (defpackage project-podium-test
-  (:use :cl :fiveam))
+  (:use :cl :fiveam)
+  (:import-from :project-podium.models))
 (in-package :project-podium-test)
 
 (def-suite tests
@@ -13,4 +14,5 @@
   (is-true
    (and t t)))
 
-(run! 'tests)
+
+run! 'tests)
