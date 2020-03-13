@@ -1,6 +1,6 @@
 (in-package :cl-user)
 (defpackage project-podium
-  (:use :cl :lucerne)
+  (:use :cl :lucerne :project-podium-models)
   (:export :app)
   (:documentation "Main project-podium code."))
 (in-package :project-podium)

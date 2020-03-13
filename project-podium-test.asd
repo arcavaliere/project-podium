@@ -3,7 +3,8 @@
   :license "GPLv3"
   :description "Tests for project-podium."
   :depends-on (:project-podium
-               :fiveam)
+               :fiveam
+               :clsql)
   :components ((:module "t"
                 :serial t
                 :components

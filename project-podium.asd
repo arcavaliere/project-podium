@@ -25,7 +25,8 @@
                (:module "src"
                 :serial t
                 :components
-                ((:file "project-podium"))))
+                ((:file "project-podium")
+                 (:file "models"))))
   :description "Project proposal and tracking platform"
   :long-description
   #.(uiop:read-file-string

@@ -1,5 +1,5 @@
 (in-package :cl-user)
-(defpackage project-podium.models
+(defpackage project-podium-models
   (:use :cl :clsql)
 
   (:export
@@ -27,15 +27,15 @@
   (:export
       :find-user
       :register-user
-      :projects
-      :project-legs
+      :get-projects
+      :get-project-legs
       :create-project
       :create-project-leg
       :change-project
       :change-project-leg
       :connect-to-database))
-(in-package :project-podium.models)
-
+(in-package :project-podium-models)
+(clsql:file-enable-sql-reader-syntax)
 
 ;; Models
 
@@ -140,9 +140,8 @@
 
 ;; Storage
 
-(defun connect-to-database (&optional (database-name "default.db"))
+(defun connect-to-database (database-name)
   (clsql:connect database-name :database-type :sqlite3)
-  (clsql:locally-enable-sql-reader-syntax)
   (let ((tables (list 'user 'project 'project-leg)))
     (mapcar #'create-table tables)))
 
@@ -165,16 +164,16 @@
      (clsql:update-records-from-instance user)
    user))
 
-(defun projects (&key project-id leader-id)
+(defun get-projects (&key project-id leader-id)
     (cond ((not (eq project-id nil)) (clsql:select 'project :where [= [slot-value 'project-id project-id]]))
           ((not (eq leader-id nil)) (clsql:select 'project :where [= [slot-value 'project-leader leader-id]]))
-          t (clsql:select 'project)))
+          (t (clsql:select 'project))))
 
-(defun project-legs (&key project-id project-leg-id leader-id)
+(defun get-project-legs (&key project-id project-leg-id leader-id)
     (cond ((not (eq project-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg-project project-id]]))
           ((not (eq project-leg-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg-id project-leg-id]]))
           ((not (eq leader-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg-leader leader-id]]))
-          t (clsql:select 'project-leg)))
+          (t (clsql:select 'project-leg))))
 
 (defun create-project (&key name leader summary status members)
   (let ((project (make-instance 'project

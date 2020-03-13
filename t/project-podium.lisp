@@ -1,7 +1,6 @@
 (in-package :cl-user)
 (defpackage project-podium-test
-  (:use :cl :fiveam)
-  (:import-from :project-podium.models))
+  (:use :cl :fiveam :clsql))
 (in-package :project-podium-test)
 
 (def-suite tests
@@ -14,5 +13,10 @@
   (is-true
    (and t t)))
 
+(test database-creation
+  (project-podium-models:connect-to-database "test.db")
+  (is
+   (not (equal clsql:*default-database* nil)))
+  (clsql:disconnect))
 
-run! 'tests)
+(run! 'tests)
