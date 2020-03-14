@@ -3,12 +3,14 @@
   (:use :cl :clsql)
   (:export
     :user
+    :user-id
     :user-username
     :user-full-name
     :user-email
     :user-password)
   (:export
-      :project
+   :project
+   :project-id
       :project-name
       :project-leader
       :project-members
@@ -17,6 +19,7 @@
       :project-status)
   (:export
       :project-leg
+      :project-leg-id
       :project-leg-project
       :project-leg-leader
       :project-leg-members
@@ -39,7 +42,7 @@
 ;; Models
 
 (clsql:def-view-class user ()
-  ((user-id :accessor user-user-id
+  ((user-id :accessor user-id
             :db-kind :key
             :db-constraints (:not-null :unique)
             :type integer
@@ -152,7 +155,7 @@
 ;; Helpers
 
 (defun find-user (user-id)
-  (clsql:select 'user :where [= [slot-value 'user-id user-id]]))
+  (car (clsql:select 'user :where [= [slot-value 'user 'user-id] user-id])))
 
 (defun register-user (&key username full-name email password)
   (let ((user (make-instance 'user
@@ -164,14 +167,14 @@
    user))
 
 (defun get-projects (&key project-id leader-id)
-    (cond ((not (eq project-id nil)) (clsql:select 'project :where [= [slot-value 'project-id project-id]]))
-          ((not (eq leader-id nil)) (clsql:select 'project :where [= [slot-value 'project-leader leader-id]]))
+    (cond ((not (eq project-id nil)) (clsql:select 'project :where [= [slot-value 'project 'project-id] project-id]))
+          ((not (eq leader-id nil)) (clsql:select 'project :where [= [slot-value 'project 'project-leader] leader-id]))
           (t (clsql:select 'project))))
 
 (defun get-project-legs (&key project-id project-leg-id leader-id)
-    (cond ((not (eq project-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg-project project-id]]))
-          ((not (eq project-leg-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg-id project-leg-id]]))
-          ((not (eq leader-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg-leader leader-id]]))
+    (cond ((not (eq project-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg 'project-leg-project] project-id]))
+          ((not (eq project-leg-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg 'project-leg-id] project-leg-id]))
+          ((not (eq leader-id nil)) (clsql:select 'project-leg :where [= [slot-value 'project-leg 'project-leg-leader] leader-id]))
           (t (clsql:select 'project-leg))))
 
 (defun create-project (&key name leader summary status members)
@@ -197,7 +200,7 @@
     leg))
 
 (defun change-project (id &key name leader members summary legs status)
-  (let ((project (car (clsql:select 'project :where [= ['slot-value project-id id]]))))
+  (let ((project (car (clsql:select 'project :where [= ['slot-value 'project 'project-id] id]))))
     (cond ((not (eq name nil)) (setf (slot-value project 'project-name) name))
           ((not (eq leader nil)) (setf (slot-value project 'project-leader) leader))
           ((not (eq members nil)) (setf (slot-value project 'project-members) members))
@@ -208,7 +211,7 @@
     project))
 
 (defun change-project-leg (id &key project leader members deliverable due-date status)
-  (let ((leg (car (clsql:select 'project-leg :where [= ['slot-value project-leg-id id]]))))
+  (let ((leg (car (clsql:select 'project-leg :where [= ['slot-value 'project-leg 'project-leg-id] id]))))
     (cond ((not (eq project nil)) (setf (slot-value leg 'project-leg-project) project))
           ((not (eq leader nil)) (setf (slot-value leg 'project-leg-leader) leader))
           ((not (eq members nil)) (setf (slot-value leg 'project-leg-members) members))
