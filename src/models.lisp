@@ -1,7 +1,6 @@
 (in-package :cl-user)
-(defpackage project-podium-models
+(defpackage project-podium.models
   (:use :cl :clsql)
-
   (:export
     :user
     :user-username
@@ -34,7 +33,7 @@
       :change-project
       :change-project-leg
       :connect-to-database))
-(in-package :project-podium-models)
+(in-package :project-podium.models)
 (clsql:file-enable-sql-reader-syntax)
 
 ;; Models
@@ -143,9 +142,9 @@
 (defun connect-to-database (database-name)
   (clsql:connect database-name :database-type :sqlite3)
   (let ((tables (list 'user 'project 'project-leg)))
-    (mapcar #'create-table tables)))
+    (mapcar #'create-table-if-missing tables)))
 
-(defun create-table (table-name)
+(defun create-table-if-missing (table-name)
   (if (not (clsql:table-exists-p table-name))
       (clsql:create-view-from-class table-name)
       t))

@@ -1,6 +1,6 @@
 (in-package :cl-user)
 (defpackage project-podium
-  (:use :cl :lucerne :project-podium-models)
+  (:use :cl :lucerne)
   (:export :app)
   (:documentation "Main project-podium code."))
 (in-package :project-podium)
@@ -9,7 +9,8 @@
 ;;; App
 
 (defapp app
-  :middlewares ((clack.middleware.static:<clack-middleware-static>
+  :middlewares (clack.middleware.session:<clack-middleware-session>
+                (clack.middleware.static:<clack-middleware-static>
                  :root (asdf:system-relative-pathname :project-podium #p"assets/")
                  :path "/static/")))
 
