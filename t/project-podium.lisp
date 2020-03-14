@@ -14,7 +14,7 @@
    (and t t)))
 
 (test database-creation
-  (project-podium-models:connect-to-database "test.db")
+  (project-podium.models:connect-to-database "test.db")
   (is
    (not (equal clsql:*default-database* nil)))
   (clsql:disconnect))
