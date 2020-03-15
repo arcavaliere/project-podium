@@ -12,7 +12,8 @@
                :clack
                :cl-json
                :cl-pass
-               :clsql)
+               :clsql
+               :mito)
   :defsystem-depends-on (:asdf-linguist)
   :components ((:module "assets"
                 :components
