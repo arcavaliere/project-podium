@@ -7,6 +7,7 @@
   :bug-tracker "https://github.com/arcavaliere/project-podium/issues"
   :source-control (:git "git@github.com:arcavaliere/project-podium.git")
   :depends-on (:lucerne
+               :lucerne-auth
                :dexador
                :quri
                :clack
@@ -26,8 +27,10 @@
                (:module "src"
                 :serial t
                 :components
-                ((:file "project-podium")
-                 (:file "models"))))
+                (
+                 (:file "models")
+                 (:file "project-podium")
+                 )))
   :description "Project proposal and tracking platform"
   :long-description
   #.(uiop:read-file-string

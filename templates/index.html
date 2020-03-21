@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>Welcome to Lucerne!</h1>
+  <h1>Welcome to Project Podium!</h1>
+  {% if error %}
+  <div class="alert alert-danger" role="alert">
+       {{ error }}
+  </div>
+  {% endif %}
+  <p> Active Users
+    {% for user in user-list %}
+      <li> {{user.full-name}} </li>
+    {% endfor %}
+  </p>
 {% endblock %}
+
+
