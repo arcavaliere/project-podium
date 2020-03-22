@@ -40,6 +40,9 @@
  (asdf:system-relative-pathname :project-podium #p"templates/"))
 
 (defparameter +index+ (djula:compile-template* "index.html"))
+(defparameter +project-details+ (djula:compile-template* "index.html"))
+(defparameter +project-leg-details+ (djula:compile-template* "index.html"))
+(defparameter +project-list+ (djula:compile-template* "index.html"))
 
 ;;; Views
 
@@ -82,8 +85,8 @@
   (let ((project (project-podium.models:get-projects :project-id project-id)))
     (render-template (+project-details+) :project-name (project-podium.models:project-name project)
                      :project-status (project-podium.models:project-status project)
-                     :project-summary (project-podium.models:project-summary)
-                     :project-leader (project-podium.models:project-leader)
+                     :project-summary (project-podium.models:project-summary project)
+                     :project-leader (project-podium.models:project-leader project)
                      :project-legs (project-podium.models:get-project-legs :project project))))
 
 @route app "/projects/:project-id/leg/:project-leg-id"
@@ -103,12 +106,25 @@
   (with-params (name leader summary status members)
     (let* ((leader-user (project-podium.models:get-user (find-user-by-username leader)))
            (member-users (mapcar #'find-user-by-username members))
-           (project (project-podium.models:create-project :name name :leader leader-user :summary summary :status status :members member-users))))
-    (redirect (format 'string "/projects/~A" (project-podium.models:get-primary-key-value project)))))
+           (project (project-podium.models:create-project :name name :leader leader-user :summary summary :status status :members member-users)))
+    (redirect (format nil "/projects/~A" (project-podium.models:get-primary-key-value project))))))
 
 @route app (:post "/projects/:project-id/edit")
 (defview project-edit (project-id)
-  (with-params (name leader summary status remove-leg leg add-member remove-member member)))
+  (with-params (name leader summary status remove-leg leg add-member remove-member member)
+    (let* ((leader-user (if (not (equal leader nil)) (find-user-by-username leader)))
+           (member-user (if (not (equal member nil)) (find-user-by-username member)))
+           (leg-obj (if (not (equal leg nil)) (project-podium.models:get-project-legs :project-leg-id leg))))
+      (project-podium.models:change-project project-id :name name
+                                                       :leader leader-user
+                                                       :summary summary
+                                                       :status status
+                                                       :remove-leg remove-leg
+                                                       :leg leg-obj
+                                                       :add-member add-member
+                                                       :remove-member remove-member
+                                                       :member member-user)
+      (redirect (format nil "/projects/~A" project-id)))))
 
 @route app (:post "/project-legs/create")
 (defview project-leg-create ()
@@ -117,22 +133,22 @@
            (member-users (mapcar #'find-user-by-username members))
            (project (project-podium.models:get-projects :project-id project-id))
            (project-leg (project-podium.models:create-project-leg :project project :leader leader :members member-users :deliverable deliverable :due-date due-date :status status)))
-      (redirect (format 'string "/projects/~A/leg/~A" (project-podium.models:get-primary-key-value project) (project-podium.models:get-primary-key-value project-leg))))))
+      (redirect (format nil "/projects/~A/leg/~A" (project-podium.models:get-primary-key-value project) (project-podium.models:get-primary-key-value project-leg))))))
 
 @route app (:post "/project/:project-id/leg/:project-leg-id/edit")
 (defview project-leg-edit (project-id project-leg-id)
   (with-params (leader deliverable due-date status add remove member)
     (let* ((leader-user (if (not (equal leader nil)) (find-user-by-username leader)))
-           (member-user (if (not (equal member nil)) (find-user-by-username members))))
-      (project-podium.models:change-project-leg project-leg-id :project (project-podium.models:get-primary-key-value project)
+           (member-user (if (not (equal member nil)) (find-user-by-username member))))
+      (project-podium.models:change-project-leg project-leg-id :project (project-podium.models:get-projects :project-id project-id)
                                                                :leader leader-user
                                                                :deliverable deliverable
                                                                :due-date due-date
                                                                :status status
                                                                :add-member add
                                                                :remove-member remove
-                                                               :members member-user)
-      (redirect (format 'string "/projects/:project-id/leg/:project-leg-id" project-id project-leg-id)))))
+                                                               :member member-user)
+      (redirect (format nil "/projects/~A/leg/~A" project-id project-leg-id)))))
 
 ; @route app (:post "/projects")
 ; (defview projects ()
