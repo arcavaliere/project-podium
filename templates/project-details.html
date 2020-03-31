@@ -1,0 +1,48 @@
+{% extend "base.html" %}
+
+{% block content %}
+<h1> {{ project-id }} </h1>
+<div id="project-details-container">
+    <table id="project-details">
+        <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Summary</th>
+            <th>Leader</th>
+        </tr>
+        <tr>
+            <td>{{project-name}}</td>
+            <td>{{project-status}}</td>
+            <td>{{project-summary}}</td>
+            <td>
+                <a href="/users/{{project-leader.id}}">{{project-leader.full-name}}</a>
+            </td>
+        </tr>
+    </table>
+</div>
+<table id="project-legs">
+    <tr>
+        <th>Project Leg ID</th>
+        <th>Project Leg Status</th>
+        <th>Project Leg Due Date</th>
+        <th>Project Leg Leader</th>
+        <th>Project Leg Deliverable</th>
+    </tr>
+    <tr>
+        <td>Active Project Legs</td>
+    </tr>
+    {% for leg in project-legs %}
+    <tr>
+        <td>
+            <a href="/projects/{{project-id}}/leg/{{leg.id}}">{{leg.id}}</a>
+        </td>
+        <td>{{leg.status}}</td>
+        <td>{{leg.due-date}}</td>
+        <td>
+            <a href="/users/{{leg.leader-id}}">{{leg.leader-id}}</a>
+        </td>
+        <td>{{leg.deliverable}}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

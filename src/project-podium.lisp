@@ -21,18 +21,18 @@
 
 (defun find-user-by-username (username)
   (let ((user-list (project-podium.models:get-users)))
-    (remove nil (mapcar (lambda (user) (if (equal username (project-podium.models:user-username user))
+    (car (remove nil (mapcar (lambda (user) (if (equal username (project-podium.models:user-username user))
                                            user
                                            nil))
-                        user-list))))
+                        user-list)))))
 
 ;;; App
 
 (defapp app
   :middlewares (clack.middleware.session:<clack-middleware-session>
                 (clack.middleware.static:<clack-middleware-static>
-                 :root (asdf:system-relative-pathname :project-podium #p"assets/")
-                 :path "/static/")))
+                 :path "/static/"
+                 :root (asdf:system-relative-pathname :project-podium #p"assets/"))))
 
 ;;; Templates
 
@@ -42,13 +42,24 @@
 (defparameter +index+ (djula:compile-template* "index.html"))
 (defparameter +project-details+ (djula:compile-template* "index.html"))
 (defparameter +project-leg-details+ (djula:compile-template* "index.html"))
-(defparameter +project-list+ (djula:compile-template* "index.html"))
+(defparameter +project-list+ (djula:compile-template* "project-list.html"))
+(defparameter +user-details+ (djula:compile-template* "user-details.html"))
+(defparameter +sign-up+ (djula:compile-template* "sign-up.htm"))
 
 ;;; Views
 
 @route app "/"
 (defview index ()
   (render-template (+index+) :user-list (project-podium.models:get-users)))
+
+@route app "/users/:user-id"
+(defview user-details (user-id)
+  (let* ((user (project-podium.models:get-user user-id))
+         (projects (project-podium.models:get-user-projects user))
+         (legs (project-podium.models:get-user-project-legs user)))
+    (render-template (+user-details+) :user user
+                     :projects projects
+                     :legs legs)))
 
 @route app (:post "/sign-up")
 (defview sign-up ()
@@ -78,7 +89,16 @@
 
 @route app "/projects"
 (defview projects ()
-  (render-template (+project-list+) :project-list (project-podium.models:get-projects)))
+  (let* ((projects (project-podium.models:get-projects))
+         (users (project-podium.models:get-users))
+         (leaders (mapcar (lambda (project) (project-podium.models:project-leader project)) projects)))
+    (render-template (+project-list+)
+                     :project-list projects
+                     :user-list users
+                     :leader-list (intersection users leaders
+                                                :test (lambda (a b)
+                                                        (equal (project-podium.models:get-primary-key-value a)
+                                                               (project-podium.models:get-primary-key-value b)))))))
 
 @route app "/projects/:project-id"
 (defview project-display (project-id)
@@ -104,8 +124,10 @@
 @route app (:post "/projects/create")
 (defview project-create ()
   (with-params (name leader summary status members)
-    (let* ((leader-user (project-podium.models:get-user (find-user-by-username leader)))
-           (member-users (mapcar #'find-user-by-username members))
+    (let* ((leader-user (find-user-by-username leader))
+           (member-users (mapcar #'find-user-by-username (if (typep members 'list)
+                                                             members
+                                                             (list members))))
            (project (project-podium.models:create-project :name name :leader leader-user :summary summary :status status :members member-users)))
     (redirect (format nil "/projects/~A" (project-podium.models:get-primary-key-value project))))))
 

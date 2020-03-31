@@ -46,7 +46,9 @@
    :initialize-database
    :get-project-members
    :get-project-leg-members
-   :get-primary-key-value))
+   :get-primary-key-value
+   :get-user-projects
+   :get-user-project-legs))
 (in-package :project-podium.models)
 
 ;; Models
@@ -168,6 +170,13 @@
 (defun get-project-leg-members (leg)
   (mito:select-dao 'user-leg (sxql:where (:= `project_leg_id (mito:object-id leg)))))
 
+(defun get-user-projects (user)
+  (let ((mappings (mito:select-dao 'user-project (sxql:where (:= 'user_id (mito:object-id user))))))
+    (mapcar (lambda (mapping) (get-projects :project-id (mito:object-id (project mapping)))) mappings)))
+
+(defun get-user-project-legs (user)
+  (let ((mappings (mito:select-dao 'user-leg (sxql:where (:= 'user_id (mito:object-id user))))))
+    (mapcar (lambda (mapping) (get-project-legs :project-leg-id (mito:object-id (project-leg mapping)))) mappings)))
 
 (defun create-project (&key name leader summary status members)
   (let* ((project (make-instance 'project
@@ -178,7 +187,7 @@
         (project-members (mapcar (lambda (user) (make-instance 'user-project
                                                                :project project
                                                                :user user))
-                                 members)))
+                                 (append members (list leader)))))
     (mito:insert-dao project)
     (mapcar #'mito:insert-dao project-members)
     project))

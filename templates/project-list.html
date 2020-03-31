@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Project List</h1>
+<div id="project-list-control-panel">
+    <form id="project-list-create-project" action="/projects/create" method="post">
+        Project Name: <input type="text" id="project-name" name="name"/>
+        <input type="submit"/>
+    </form>
+    Project Summary: <textarea id="project-summary" name="summary" form="project-list-create-project" maxlength="256">Project Summary</textarea>
+    Project Leader: <select id="project-leader" name="leader" form="project-list-create-project">
+        {% for user in user-list %}
+        <option value="{{user.username}}">{{user.full-name}}</option>
+        {% endfor %}
+    </select>
+    Project Status: <select id="project-status"  name="status" form="project-list-create-project">
+        <option value="proposed">Proposed</option>
+        <option value="in-progress">In Progress</option>
+    </select>
+    Project Members <select id="project-members" name="members" form="project-list-create-project" multiple>
+        {% for user in user-list %}
+        <option value="{{ user.username }}">{{ user.full-name }}</option>
+        {% endfor %}
+    </select>
+</div>
+<div id="project-list">
+    <span id="project-list-container">
+        <table id="project-list-table">
+            <tr>
+                <th>Name</th>
+                <th>Leader</th>
+                <th>Summary</th>
+                <th>Status</th>
+            </tr>
+        {% for project in project-list %}
+            <tr>
+                <td>{{project.name}}</td>
+                {% for leader in leader-list %}
+                {% ifequal leader.id project.leader-id %}
+                <td>
+                    <a href="/users/{{leader.id}}">{{leader.full-name}}</a>
+                </td>
+                {% endifequal %}
+                {% endfor %}
+                <td>{{project.summary}}</td>
+                <td>{{project.status}}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    </span>
+</div>
+
+{% endblock %}

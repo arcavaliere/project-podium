@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>User Information for {{user.full-name}}</h1>
+<div>
+    <table id="user-details-table">
+        <tr id="user-detail-header">
+            <th>Username</th>
+            <th>Full Name</th>
+            <th>Email</th>
+        </tr>
+        <tr id="user-detail-information">
+            <td>{{user.username}}</td>
+            <td>{{user.full-name}}</td>
+            <td>{{user.email}}</td>
+        </tr>
+    </table>
+    <h3>Projects</h3>
+    {% for project in projects %}
+    <li>
+        <a href="/projects/{{project.id}}">{{ project.name }}</a>
+    </li>
+    {% endfor %}
+    <h3>Project Legs</h3>
+    {% for leg in legs %}
+    <li>
+        <a href="/projects/{{leg.project-id}}/leg/{{leg.id}}">{{ leg.deliverable }}</a>
+    </li>
+    {% endfor %}
+</div>
+{% endblock %}
