@@ -44,7 +44,7 @@
 (defparameter +project-leg-details+ (djula:compile-template* "index.html"))
 (defparameter +project-list+ (djula:compile-template* "project-list.html"))
 (defparameter +user-details+ (djula:compile-template* "user-details.html"))
-(defparameter +sign-up+ (djula:compile-template* "sign-up.htm"))
+(defparameter +user-list+ (djula:compile-template* "user-list.html"))
 
 ;;; Views
 
@@ -60,6 +60,11 @@
     (render-template (+user-details+) :user user
                      :projects projects
                      :legs legs)))
+
+@route app "/users"
+(defview users ()
+  (let ((users (project-podium.models:get-users)))
+    (render-template (+user-list+) :users users)))
 
 @route app (:post "/sign-up")
 (defview sign-up ()
